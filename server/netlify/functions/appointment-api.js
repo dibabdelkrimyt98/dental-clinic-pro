@@ -1,7 +1,19 @@
-const { getClient } = require('./db-client');
+// --- Database Client Logic (INLINED) ---
+const { Client } = require('pg');
+
+async function getClient() {
+    const client = new Client({
+        connectionString: process.env.DB_CONN_STRING,
+        ssl: { rejectUnauthorized: false }
+    });
+    // Use try/finally to ensure connection closing is always attempted
+    await client.connect();
+    return client;
+}
+// --- END Database Client Logic ---
+
 
 exports.handler = async (event, context) => {
-    // 1. Method Check
     if (event.httpMethod !== 'POST') {
         return { 
             statusCode: 405, 
@@ -9,33 +21,32 @@ exports.handler = async (event, context) => {
         };
     }
 
-    let client; // Declare client outside try/catch to ensure we can close it in finally
+    let client;
     
     try {
         const data = JSON.parse(event.body);
         const { fullname, phone, reason, address, previous_treatment } = data;
         
-        client = await getClient(); // Open connection
+        client = await getClient(); // Opens the secure connection to Supabase
 
-        // 2. PostgreSQL Query
-        // The NOW() function inserts the current timestamp directly via Supabase/PostgreSQL.
+        // Convert boolean to PostgreSQL compatible string
+        const isPrevious = previous_treatment === true ? 'TRUE' : 'FALSE';
+
+        // PostgreSQL Query
         const sql = `
             INSERT INTO appointments (fullname, phone, reason, address, previous_treatment, submission_date) 
             VALUES ($1, $2, $3, $4, $5, NOW()) RETURNING id
         `;
         
-        // Ensure previous_treatment is a boolean string for the PostgreSQL driver
-        const isPrevious = previous_treatment === true ? 'TRUE' : 'FALSE';
-
         const res = await client.query(sql, [
             fullname, 
             phone, 
             reason, 
             address, 
-            isPrevious // Pass the explicit string value
+            isPrevious
         ]);
         
-        // 3. Success Response
+        // Success Response
         return {
             statusCode: 200,
             body: JSON.stringify({ 
@@ -54,7 +65,7 @@ exports.handler = async (event, context) => {
             }),
         };
     } finally {
-        // 4. Close Connection
+        // Ensure connection is closed whether successful or failed
         if (client) {
             await client.end();
         }
