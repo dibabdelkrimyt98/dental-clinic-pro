@@ -2,3 +2,7 @@
   command = "npm run build"
   functions = "netlify/functions" # Tells Netlify where the functions are located
   publish = "client/dist" # Tells Netlify where the static React files are located
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--prefix client"
