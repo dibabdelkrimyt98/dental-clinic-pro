@@ -19,7 +19,7 @@ export default function Appointment() {
     e.preventDefault();
     setStatus('sending');
     try {
-      await axios.post('http://localhost:5000/api/appointment', formData);
+      await axios.post('/.netlify/functions/appointment-api', formData);
       setStatus('success');
       setTimeout(() => navigate('/'), 3000); 
     } catch (error) {
