@@ -2,8 +2,9 @@
 const { Client } = require('pg');
 
 async function getClient() {
+    // FIX: Remove 'const' and assign the environment variable directly to the connectionString property
     const client = new Client({
-        connectionString: process.env.DB_CONN_STRING,
+        connectionString: process.env.NETLIFY_DATABASE_URL, // <--- CORRECTED LINE
         ssl: { rejectUnauthorized: false }
     });
     // Use try/finally to ensure connection closing is always attempted
@@ -27,7 +28,8 @@ exports.handler = async (event, context) => {
         const data = JSON.parse(event.body);
         const { fullname, phone, reason, address, previous_treatment } = data;
         
-        client = await getClient(); // Opens the secure connection to Supabase
+        // This function call will now correctly pass the connection string
+        client = await getClient(); 
 
         // Convert boolean to PostgreSQL compatible string
         const isPrevious = previous_treatment === true ? 'TRUE' : 'FALSE';
