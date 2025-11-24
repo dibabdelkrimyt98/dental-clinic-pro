@@ -1,0 +1,9 @@
+{
+  "name": "dental-clinic-pro-root",
+  "version": "1.0.0",
+  "description": "Root dependencies for Netlify Functions",
+  "main": "index.js",
+  "dependencies": {
+    "pg": "^8.11.3"
+  }
+}
